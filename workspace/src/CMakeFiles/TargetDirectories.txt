@@ -1,3 +1,0 @@
-/home/jjimenez/SII/SII-57506/workspace/src/CMakeFiles/tenis.dir
-/home/jjimenez/SII/SII-57506/workspace/src/CMakeFiles/edit_cache.dir
-/home/jjimenez/SII/SII-57506/workspace/src/CMakeFiles/rebuild_cache.dir
