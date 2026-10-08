@@ -51,4 +51,6 @@ En esta práctica se ha logrado realizar el juego del Tenis con dos jugadores.
 Para ello se ha empleado el entorno de wsl y Visual Studio Code para la programación del juego. 
 Además se empleo CMake junto a Make para la compilación de todos los archivos.
 
+Ene este caso se ha aumentado la velocidad del primer punto de partido. En los siguientes, la pelota se moverá más lenta.
+
 
