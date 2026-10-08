@@ -23,6 +23,5 @@ Raqueta::~Raqueta()
 
 void Raqueta::Mueve(float t)
 {
-    pos.x = pos.x + velocidad.x*t;
-	pos.y = pos.y + velocidad.y*t;
+    pos = pos + velocidad*t;
 }
