@@ -10,7 +10,10 @@
 
 Raqueta::Raqueta()
 {
-	
+	velocidad.x=0;
+	velocidad.y=0;
+    pos.x=0;
+	pos.y=0;
 }
 
 Raqueta::~Raqueta()
