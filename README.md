@@ -42,3 +42,13 @@ Asignatura impartida por el **Departamento de Ingeniería Eléctrica, Electróni
 Este repositorio tiene finalidad exclusivamente docente.
 
 Si detectas algún error o tienes alguna sugerencia de mejora, puedes comunicarlo al profesorado de la asignatura.
+
+## -> Avances
+
+Práctica 1.
+
+En esta práctica se ha logrado realizar el juego del Tenis con dos jugadores.
+Para ello se ha empleado el entorno de wsl y Visual Studio Code para la programación del juego. 
+Además se empleo CMake junto a Make para la compilación de todos los archivos.
+
+
