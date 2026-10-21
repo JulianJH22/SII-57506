@@ -17,6 +17,7 @@
 
 class CMundo  
 {
+	int fd;
 public:
 	void Init();
 	CMundo();

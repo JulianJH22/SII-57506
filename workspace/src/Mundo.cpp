@@ -21,7 +21,8 @@ CMundo::CMundo()
 
 CMundo::~CMundo()
 {
-
+	close(fd);
+	
 }
 
 void CMundo::InitGL()
@@ -115,6 +116,8 @@ void CMundo::OnDraw()
 
 void CMundo::OnTimer(int value)
 {	
+	char cad[100];
+
 	jugador1.Mueve(0.025f);
 	jugador2.Mueve(0.025f);
 	esfera.Mueve(0.025f);
@@ -135,6 +138,7 @@ void CMundo::OnTimer(int value)
 		esfera.velocidad.x=2+2*rand()/(float)RAND_MAX;
 		esfera.velocidad.y=2+2*rand()/(float)RAND_MAX;
 		puntos2++;
+		sprintf(cad,"Jugador 2 marca 1 punto, lleva un total de %d puntos.",puntos2);
 	}
 
 	if(fondo_dcho.Rebota(esfera))
@@ -144,8 +148,10 @@ void CMundo::OnTimer(int value)
 		esfera.velocidad.x=-2-2*rand()/(float)RAND_MAX;
 		esfera.velocidad.y=-2-2*rand()/(float)RAND_MAX;
 		puntos1++;
+		sprintf(cad,"Jugador 1 marca 1 punto, lleva un total de %d puntos.",puntos1);
 	}
 
+	write(fd, cad, sizeof(cad));
 }
 
 void CMundo::OnKeyboardDown(unsigned char key, int x, int y)
@@ -164,6 +170,11 @@ void CMundo::OnKeyboardDown(unsigned char key, int x, int y)
 
 void CMundo::Init()
 {
+	if ((fd=open("F_logger", O_WRONLY))<0) {
+		perror("No puede abrirse el FIFO");
+		return;
+	}
+	
 	Plano p;
 //pared inferior
 	p.x1=-7;p.y1=-5;
