@@ -26,8 +26,8 @@ int main(int argc, char **argv) {
     }
     /* Leer de la FIFO */
     while ((n = read(fd, buffer, sizeof(buffer))) > 0) {
-        printf("Recibido: %s", buffer);
 	    write(1, buffer, n);
+        write(1, "\n", 1);
     }
     close(fd);
     unlink("F_logger");

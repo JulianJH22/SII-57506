@@ -141,6 +141,12 @@ void CMundo::OnTimer(int value)
 		esfera.velocidad.x=2+2*rand()/(float)RAND_MAX;
 		esfera.velocidad.y=2+2*rand()/(float)RAND_MAX;
 		puntos2++;
+		if (puntos2 >= 3)
+		{
+			sprintf(cad,"Jugador 2 gana la partida.\n");
+			if (fd >= 0) write(fd, cad, strlen(cad));
+			exit(0);
+		}
 		sprintf(cad,"Jugador 2 marca 1 punto, lleva un total de %d puntos.",puntos2);
 		if (fd >= 0) write(fd, cad, strlen(cad));
 	}
@@ -152,6 +158,12 @@ void CMundo::OnTimer(int value)
 		esfera.velocidad.x=-2-2*rand()/(float)RAND_MAX;
 		esfera.velocidad.y=-2-2*rand()/(float)RAND_MAX;
 		puntos1++;
+		if (puntos1 >= 3)
+		{
+			sprintf(cad,"Jugador 1 gana la partida.\n");
+			if (fd >= 0) write(fd, cad, strlen(cad));
+			exit(0);
+		}
 		sprintf(cad,"Jugador 1 marca 1 punto, lleva un total de %d puntos.\n",puntos1);
 		if (fd >= 0) write(fd, cad, strlen(cad));
 	}
