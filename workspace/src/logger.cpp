@@ -9,6 +9,7 @@
 int main(int argc, char **argv) {
     int fd;
     char buffer[1024];
+    ssize_t n;
 
     // borrar FIFO por si existiera previamente
     unlink("F_logger");
@@ -19,13 +20,14 @@ int main(int argc, char **argv) {
         return(1);
     }
     /* Abrir el FIFO */
-    if (fd = open("F_logger", O_RDONLY)) {
+    if ((fd = open("F_logger", O_RDONLY)) < 0) {
         perror("No puede abrirse el FIFO");
         return(1);
     }
     /* Leer de la FIFO */
-    while (read(fd, buffer, sizeof(buffer)) > 0) {
-	    write(1, buffer, sizeof(buffer));
+    while ((n = read(fd, buffer, sizeof(buffer))) > 0) {
+        printf("Recibido: %s", buffer);
+	    write(1, buffer, n);
     }
     close(fd);
     unlink("F_logger");

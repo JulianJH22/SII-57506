@@ -4,9 +4,12 @@
 #include <fstream>
 #include "Mundo.h"
 #include "glut.h"
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <math.h>
 
@@ -16,13 +19,13 @@
 
 CMundo::CMundo()
 {
+	fd = -1;
 	Init();
 }
 
 CMundo::~CMundo()
 {
-	close(fd);
-	
+	if (fd >= 0) close(fd);
 }
 
 void CMundo::InitGL()
@@ -139,6 +142,7 @@ void CMundo::OnTimer(int value)
 		esfera.velocidad.y=2+2*rand()/(float)RAND_MAX;
 		puntos2++;
 		sprintf(cad,"Jugador 2 marca 1 punto, lleva un total de %d puntos.",puntos2);
+		if (fd >= 0) write(fd, cad, strlen(cad));
 	}
 
 	if(fondo_dcho.Rebota(esfera))
@@ -148,10 +152,9 @@ void CMundo::OnTimer(int value)
 		esfera.velocidad.x=-2-2*rand()/(float)RAND_MAX;
 		esfera.velocidad.y=-2-2*rand()/(float)RAND_MAX;
 		puntos1++;
-		sprintf(cad,"Jugador 1 marca 1 punto, lleva un total de %d puntos.",puntos1);
+		sprintf(cad,"Jugador 1 marca 1 punto, lleva un total de %d puntos.\n",puntos1);
+		if (fd >= 0) write(fd, cad, strlen(cad));
 	}
-
-	write(fd, cad, sizeof(cad));
 }
 
 void CMundo::OnKeyboardDown(unsigned char key, int x, int y)
@@ -170,11 +173,6 @@ void CMundo::OnKeyboardDown(unsigned char key, int x, int y)
 
 void CMundo::Init()
 {
-	if ((fd=open("F_logger", O_WRONLY))<0) {
-		perror("No puede abrirse el FIFO");
-		return;
-	}
-	
 	Plano p;
 //pared inferior
 	p.x1=-7;p.y1=-5;
@@ -203,4 +201,8 @@ void CMundo::Init()
 	jugador2.g=0;
 	jugador2.x1=6;jugador2.y1=-1;
 	jugador2.x2=6;jugador2.y2=1;
+
+	if ((fd = open("F_logger", O_WRONLY)) < 0) {
+		perror("No puede abrirse el FIFO");
+	}
 }
