@@ -147,7 +147,7 @@ void CMundo::OnTimer(int value)
 			if (fd >= 0) write(fd, cad, strlen(cad));
 			exit(0);
 		}
-		sprintf(cad,"Jugador 2 marca 1 punto, lleva un total de %d puntos.",puntos2);
+		sprintf(cad,"Jugador 2 marca 1 punto, lleva un total de %d puntos.\n",puntos2);
 		if (fd >= 0) write(fd, cad, strlen(cad));
 	}
 
