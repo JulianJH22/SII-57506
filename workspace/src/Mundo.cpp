@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/mman.h>
 #include <string.h>
 #include <math.h>
 
@@ -119,6 +120,13 @@ void CMundo::OnDraw()
 
 void CMundo::OnTimer(int value)
 {	
+	dat->esfera=esfera;
+	dat->raqueta2=jugador2;
+
+	if(dat->accion==1) jugador2.velocidad.y=4;
+	else if(dat->accion==-1) jugador2.velocidad.y=-4;
+	else jugador2.velocidad.y=0;
+
 	char cad[100];
 
 	jugador1.Mueve(0.025f);
@@ -177,8 +185,6 @@ void CMundo::OnKeyboardDown(unsigned char key, int x, int y)
 //	case 'd':jugador1.velocidad.x=1;break;
 	case 's':jugador1.velocidad.y=-4;break;
 	case 'w':jugador1.velocidad.y=4;break;
-	case 'l':jugador2.velocidad.y=-4;break;
-	case 'o':jugador2.velocidad.y=4;break;
 
 	}
 }
@@ -217,4 +223,18 @@ void CMundo::Init()
 	if ((fd = open("F_logger", O_WRONLY)) < 0) {
 		perror("No puede abrirse el FIFO");
 	}
+
+	if ((fd_bot = open("F_bot", O_RDWR | O_CREAT | O_TRUNC, 0666)) < 0) {
+		perror("No puede abrirse el bot");
+	}
+
+	dat = (DatosMemCompartida*)mmap(NULL, sizeof(DatosMemCompartida), PROT_READ | PROT_WRITE, MAP_SHARED, fd_bot, 0);
+
+	ftruncate(fd_bot, sizeof(DatosMemCompartida));
+	if (dat == MAP_FAILED)
+	{
+		perror("Error en la proyeccion mmap"); 
+		exit (1);
+	}
+	close(fd_bot);
 }

@@ -58,3 +58,7 @@ Práctica 2.
 En esta práctica se ha creado una nueva rama del repositorio para incorporar el logger, un programa independiente que se comunica con el juego mediante una tubería con nombre (FIFO) y registra por pantalla cada punto marcado, indicando qué jugador ha anotado y cuál es su puntuación total. 
 
 Además, se ha modificado la lógica del juego para que el partido termine automáticamente cuando uno de los dos jugadores alcanza los 3 puntos, finalizando así la ejecución de la partida.
+
+Práctica 3.
+
+En esta práctica se ha creado una nueva rama del repositorio para incorporar el bot, un programa independiente que se comunica con el juego mediante un fichero proyectado en memoria y elige qué acción realizar para evitar que le marquen un punto. 
