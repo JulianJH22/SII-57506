@@ -27,16 +27,26 @@ int main(int argc,char* argv[])
 		return 1;
 	}
 	close(fd);
+	
 
+	
 	while(1)
 	{
 		usleep(2500);
-		float centro = (dat->raqueta2.y1 + dat->raqueta2.y2) / 2.0f;
+		float centro = (dat->raqueta.y1 + dat->raqueta.y2) / 2.0f;
 		float objetivo = dat->esfera.centro.y;
 
 		if      (objetivo > centro + 0.2f) dat->accion = 1;
 		else if (objetivo < centro - 0.2f) dat->accion = -1;
 		else dat->accion = 0;
+
+		if (dat->puntos_2 >= 3) {
+			printf("Bot: He ganado!\n");
+			break;
+		} else if (dat->puntos_1 >= 3) {
+			printf("Bot: He perdido!\n");
+			break;
+		}
 	}
 	return 0;
 }

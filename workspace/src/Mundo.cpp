@@ -121,7 +121,14 @@ void CMundo::OnDraw()
 void CMundo::OnTimer(int value)
 {	
 	dat->esfera=esfera;
-	dat->raqueta2=jugador2;
+	dat->raqueta=jugador2;
+	dat->puntos_1=puntos1;
+	dat->puntos_2=puntos2;
+
+	if (puntos1 >= 3 || puntos2 >= 3) {
+		exit(0);
+;
+	}
 
 	if(dat->accion==1) jugador2.velocidad.y=4;
 	else if(dat->accion==-1) jugador2.velocidad.y=-4;
@@ -146,34 +153,34 @@ void CMundo::OnTimer(int value)
 	{
 		esfera.centro.x=0;
 		esfera.centro.y=rand()/(float)RAND_MAX;
-		esfera.velocidad.x=2+2*rand()/(float)RAND_MAX;
-		esfera.velocidad.y=2+2*rand()/(float)RAND_MAX;
+		esfera.velocidad.x=5+2*rand()/(float)RAND_MAX;
+		esfera.velocidad.y=8+2*rand()/(float)RAND_MAX;
 		puntos2++;
 		if (puntos2 >= 3)
 		{
 			sprintf(cad,"Jugador 2 gana la partida.\n");
 			if (fd >= 0) write(fd, cad, strlen(cad));
-			exit(0);
+		} else {
+			sprintf(cad,"Jugador 2 marca 1 punto, lleva un total de %d puntos.\n",puntos2);
+			if (fd >= 0) write(fd, cad, strlen(cad));
 		}
-		sprintf(cad,"Jugador 2 marca 1 punto, lleva un total de %d puntos.\n",puntos2);
-		if (fd >= 0) write(fd, cad, strlen(cad));
 	}
 
 	if(fondo_dcho.Rebota(esfera))
 	{
 		esfera.centro.x=0;
 		esfera.centro.y=rand()/(float)RAND_MAX;
-		esfera.velocidad.x=-2-2*rand()/(float)RAND_MAX;
-		esfera.velocidad.y=-2-2*rand()/(float)RAND_MAX;
+		esfera.velocidad.x=-5-2*rand()/(float)RAND_MAX;
+		esfera.velocidad.y=-8-2*rand()/(float)RAND_MAX;
 		puntos1++;
 		if (puntos1 >= 3)
 		{
 			sprintf(cad,"Jugador 1 gana la partida.\n");
 			if (fd >= 0) write(fd, cad, strlen(cad));
-			exit(0);
+		} else {
+			sprintf(cad,"Jugador 1 marca 1 punto, lleva un total de %d puntos.\n",puntos1);
+			if (fd >= 0) write(fd, cad, strlen(cad));
 		}
-		sprintf(cad,"Jugador 1 marca 1 punto, lleva un total de %d puntos.\n",puntos1);
-		if (fd >= 0) write(fd, cad, strlen(cad));
 	}
 }
 

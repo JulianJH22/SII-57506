@@ -6,6 +6,8 @@ class DatosMemCompartida
 {       
 public:         
       Esfera esfera;
-      Raqueta raqueta2;
+      Raqueta raqueta;
+      int jugador_id;
+      int puntos_2, puntos_1;
       int accion; //1 arriba, 0 nada, -1 abajo
 };
