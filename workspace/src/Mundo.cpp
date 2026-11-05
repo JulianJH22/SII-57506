@@ -21,6 +21,7 @@
 CMundo::CMundo()
 {
 	fd = -1;
+	n_j = 0;
 	Init();
 }
 
@@ -125,14 +126,34 @@ void CMundo::OnTimer(int value)
 	dat->puntos_1=puntos1;
 	dat->puntos_2=puntos2;
 
+	dat2->esfera=esfera;
+	dat2->raqueta=jugador2;
+	dat2->puntos_1=puntos1;
+	dat2->puntos_2=puntos2;
+
+	n_j = dat->j_id + dat2->j_id;
+	
 	if (puntos1 >= 3 || puntos2 >= 3) {
 		exit(0);
-;
 	}
 
-	if(dat->accion==1) jugador2.velocidad.y=4;
-	else if(dat->accion==-1) jugador2.velocidad.y=-4;
-	else jugador2.velocidad.y=0;
+	if (n_j == 2) {
+
+		if(dat2->accion==1) jugador1.velocidad.y=8;
+		else if(dat2->accion==-1) jugador1.velocidad.y=-8;
+		else jugador1.velocidad.y=0;
+
+		if(dat->accion==1) jugador2.velocidad.y=8;
+		else if(dat->accion==-1) jugador2.velocidad.y=-8;
+		else jugador2.velocidad.y=0;
+
+	} else if (n_j == 1) {
+
+		if(dat->accion==1) jugador2.velocidad.y=8;
+		else if(dat->accion==-1) jugador2.velocidad.y=-8;
+		else jugador2.velocidad.y=0;
+
+	}
 
 	char cad[100];
 
@@ -186,14 +207,19 @@ void CMundo::OnTimer(int value)
 
 void CMundo::OnKeyboardDown(unsigned char key, int x, int y)
 {
-	switch(key)
-	{
-//	case 'a':jugador1.velocidad.x=-1;break;
-//	case 'd':jugador1.velocidad.x=1;break;
-	case 's':jugador1.velocidad.y=-4;break;
-	case 'w':jugador1.velocidad.y=4;break;
+if (n_j < 2) { 
+	switch(key){ 
+		case 's': jugador1.velocidad.y=-4; 	break; 
+		case 'w': jugador1.velocidad.y=4; break; 
+	} 
+}
 
-	}
+if (n_j == 0) { 
+	switch(key){ 
+		case 'l': jugador2.velocidad.y=-4; break; 
+		case 'o': jugador2.velocidad.y=4; break; 
+	} 
+}
 }
 
 void CMundo::Init()
@@ -235,13 +261,20 @@ void CMundo::Init()
 		perror("No puede abrirse el bot");
 	}
 
-	dat = (DatosMemCompartida*)mmap(NULL, sizeof(DatosMemCompartida), PROT_READ | PROT_WRITE, MAP_SHARED, fd_bot, 0);
+	ftruncate(fd_bot, 2*sizeof(DatosMemCompartida));
 
-	ftruncate(fd_bot, sizeof(DatosMemCompartida));
+	dat = (DatosMemCompartida*)mmap(NULL, 2*sizeof(DatosMemCompartida), PROT_READ | PROT_WRITE, MAP_SHARED, fd_bot, 0);
+
 	if (dat == MAP_FAILED)
 	{
 		perror("Error en la proyeccion mmap"); 
 		exit (1);
 	}
+
+	dat2 = dat + 1;
+
+	dat ->j_id = 0;
+	dat2 ->j_id = 0;
+
 	close(fd_bot);
 }

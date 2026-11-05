@@ -20,8 +20,10 @@
 class CMundo  
 {
 	DatosMemCompartida* dat;
+	DatosMemCompartida* dat2;
 	int fd;
 	int fd_bot;
+	int n_j;
 public:
 	void Init();
 	CMundo();

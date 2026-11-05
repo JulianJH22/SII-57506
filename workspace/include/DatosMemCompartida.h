@@ -10,4 +10,5 @@ public:
       int jugador_id;
       int puntos_2, puntos_1;
       int accion; //1 arriba, 0 nada, -1 abajo
+      int j_id;
 };
