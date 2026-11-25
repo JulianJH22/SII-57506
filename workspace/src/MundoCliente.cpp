@@ -2,7 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 #include <fstream>
-#include "Mundo.h"
+#include "MundoCliente.h"
 #include "glut.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -18,19 +18,24 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CMundo::CMundo()
+CMundoCliente::CMundoCliente()
 {
-	fd = -1;
+	fd_sc = -1;
+	fd_bot = -1;
 	n_j = 0;
+	dat = dat2 = NULL;
+	puntos1 = 0;
+	puntos2 = 0;
 	Init();
 }
 
-CMundo::~CMundo()
+CMundoCliente::~CMundoCliente()
 {
-	if (fd >= 0) close(fd);
+	if (fd_sc >= 0) close(fd_sc);
+	if (fd_cs >= 0) close(fd_cs);
 }
 
-void CMundo::InitGL()
+void CMundoCliente::InitGL()
 {
 	//Habilitamos las luces, la renderizacion y el color de los materiales
 	glEnable(GL_LIGHT0);
@@ -42,7 +47,7 @@ void CMundo::InitGL()
 	gluPerspective( 40.0, 800/600.0f, 0.1, 150);
 }
 
-void print(char *mensaje, int x, int y, float r, float g, float b)
+static void print(char *mensaje, int x, int y, float r, float g, float b)
 {
 	glDisable (GL_LIGHTING);
 
@@ -79,7 +84,7 @@ void print(char *mensaje, int x, int y, float r, float g, float b)
 
 	glEnable( GL_DEPTH_TEST );
 }
-void CMundo::OnDraw()
+void CMundoCliente::OnDraw()
 {
 	//Borrado de la pantalla	
    	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -119,8 +124,9 @@ void CMundo::OnDraw()
 	glutSwapBuffers();
 }
 
-void CMundo::OnTimer(int value)
+void CMundoCliente::OnTimer(int value)
 {	
+	//Actualizar la posicion de los objetos para el bot
 	dat->esfera=esfera;
 	dat->raqueta=jugador2;
 	dat->puntos_1=puntos1;
@@ -132,7 +138,7 @@ void CMundo::OnTimer(int value)
 	dat2->puntos_2=puntos2;
 
 	n_j = dat->j_id + dat2->j_id;
-	
+
 	if (puntos1 >= 3 || puntos2 >= 3) {
 		exit(0);
 	}
@@ -155,74 +161,25 @@ void CMundo::OnTimer(int value)
 
 	}
 
-	char cad[100];
+	//Actualizar la posicion de los objetos en pantalla
+	char buf[1024];
+	ssize_t n = read(fd_sc, buf, sizeof(buf) - 1);
 
-	jugador1.Mueve(0.025f);
-	jugador2.Mueve(0.025f);
-	esfera.Mueve(0.025f);
-	int i;
-	for(i=0;i<paredes.size();i++)
-	{
-		paredes[i].Rebota(esfera);
-		paredes[i].Rebota(jugador1);
-		paredes[i].Rebota(jugador2);
-	}
+	if (n <= 0) exit(0);      // el servidor cerró o hubo error
+	buf[n] = '\0';
+	sscanf(buf,"%f %f %f %f %f %f %f %f %f %f %d %d", &esfera.centro.x,&esfera.centro.y, &jugador1.x1,&jugador1.y1,&jugador1.x2,&jugador1.y2, &jugador2.x1,&jugador2.y1,&jugador2.x2,&jugador2.y2, &puntos1, &puntos2); 
 
-	jugador1.Rebota(esfera);
-	jugador2.Rebota(esfera);
-	if(fondo_izq.Rebota(esfera))
-	{
-		esfera.centro.x=0;
-		esfera.centro.y=rand()/(float)RAND_MAX;
-		esfera.velocidad.x=5+2*rand()/(float)RAND_MAX;
-		esfera.velocidad.y=8+2*rand()/(float)RAND_MAX;
-		puntos2++;
-		if (puntos2 >= 3)
-		{
-			sprintf(cad,"Jugador 2 gana la partida.\n");
-			if (fd >= 0) write(fd, cad, strlen(cad));
-		} else {
-			sprintf(cad,"Jugador 2 marca 1 punto, lleva un total de %d puntos.\n",puntos2);
-			if (fd >= 0) write(fd, cad, strlen(cad));
-		}
-	}
-
-	if(fondo_dcho.Rebota(esfera))
-	{
-		esfera.centro.x=0;
-		esfera.centro.y=rand()/(float)RAND_MAX;
-		esfera.velocidad.x=-5-2*rand()/(float)RAND_MAX;
-		esfera.velocidad.y=-8-2*rand()/(float)RAND_MAX;
-		puntos1++;
-		if (puntos1 >= 3)
-		{
-			sprintf(cad,"Jugador 1 gana la partida.\n");
-			if (fd >= 0) write(fd, cad, strlen(cad));
-		} else {
-			sprintf(cad,"Jugador 1 marca 1 punto, lleva un total de %d puntos.\n",puntos1);
-			if (fd >= 0) write(fd, cad, strlen(cad));
-		}
-	}
 }
 
-void CMundo::OnKeyboardDown(unsigned char key, int x, int y)
+void CMundoCliente::OnKeyboardDown(unsigned char key, int x, int y)
 {
-if (n_j < 2) { 
-	switch(key){ 
-		case 's': jugador1.velocidad.y=-4; 	break; 
-		case 'w': jugador1.velocidad.y=4; break; 
-	} 
+	char buf[100];
+	sprintf(buf,"%c %d", key, n_j);
+	if (fd_cs >= 0) write(fd_cs, buf, strlen(buf));
+
 }
 
-if (n_j == 0) { 
-	switch(key){ 
-		case 'l': jugador2.velocidad.y=-4; break; 
-		case 'o': jugador2.velocidad.y=4; break; 
-	} 
-}
-}
-
-void CMundo::Init()
+void CMundoCliente::Init()
 {
 	Plano p;
 //pared inferior
@@ -253,10 +210,10 @@ void CMundo::Init()
 	jugador2.x1=6;jugador2.y1=-1;
 	jugador2.x2=6;jugador2.y2=1;
 
-	if ((fd = open("F_logger", O_WRONLY)) < 0) {
-		perror("No puede abrirse el FIFO");
-	}
+	if ((fd_sc = open("F_sc", O_RDONLY)) < 0) { perror("open F_sc"); return; }
+	if ((fd_cs = open("F_cs", O_WRONLY)) < 0) { perror("open F_cs"); return; }
 
+	//Proyeccion de memoria compartida para el bot
 	if ((fd_bot = open("F_bot", O_RDWR | O_CREAT | O_TRUNC, 0666)) < 0) {
 		perror("No puede abrirse el bot");
 	}

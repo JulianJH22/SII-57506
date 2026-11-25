@@ -17,17 +17,18 @@
 #include "DatosMemCompartida.h"
 
 
-class CMundo  
+class CMundoCliente  
 {
 	DatosMemCompartida* dat;
 	DatosMemCompartida* dat2;
-	int fd;
+	int fd_sc;
+	int fd_cs;
 	int fd_bot;
 	int n_j;
 public:
 	void Init();
-	CMundo();
-	virtual ~CMundo();	
+	CMundoCliente();
+	virtual ~CMundoCliente();	
 	
 	void InitGL();	
 	void OnKeyboardDown(unsigned char key, int x, int y);

@@ -2,7 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 #include <fstream>
-#include "Mundo.h"
+#include "MundoServidor.h"
 #include "glut.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -13,24 +13,66 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <math.h>
+#include <pthread.h>
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CMundo::CMundo()
+void* hilo_comandos(void* d)
+{
+      CMundoServidor* p=(CMundoServidor*) d;
+      p->RecibeComandosJugador();
+	  return NULL;
+}
+
+void CMundoServidor::RecibeComandosJugador()
+{
+     while (1) {
+            usleep(10);
+            char cad[100];
+			ssize_t n = read(fd_cs, cad, sizeof(cad) - 1);
+            cad[n] = '\0';
+            unsigned char key;
+            sscanf(cad,"%c %d",&key, &n_j);
+
+			if (n_j < 2) { 
+				switch(key){ 
+					case 's': jugador1.velocidad.y=-4; 	break; 
+					case 'w': jugador1.velocidad.y=4; break; 
+				} 
+			}
+
+			if (n_j == 0) { 
+				switch(key){ 
+					case 'l': jugador2.velocidad.y=-4; break; 
+					case 'o': jugador2.velocidad.y=4; break; 
+				} 
+			}
+      }
+}
+
+CMundoServidor::CMundoServidor()
 {
 	fd = -1;
+	fd_sc = -1;
 	n_j = 0;
+	puntos1 = 0;
+	puntos2 = 0;
 	Init();
 }
 
-CMundo::~CMundo()
+CMundoServidor::~CMundoServidor()
 {
+	pthread_join(thid1, NULL);
 	if (fd >= 0) close(fd);
+	if (fd_sc >= 0) close(fd_sc);
+	if (fd_cs >= 0) close(fd_cs);
+	unlink("F_sc");
+	unlink("F_cs");
 }
 
-void CMundo::InitGL()
+void CMundoServidor::InitGL()
 {
 	//Habilitamos las luces, la renderizacion y el color de los materiales
 	glEnable(GL_LIGHT0);
@@ -42,7 +84,7 @@ void CMundo::InitGL()
 	gluPerspective( 40.0, 800/600.0f, 0.1, 150);
 }
 
-void print(char *mensaje, int x, int y, float r, float g, float b)
+static void print(char *mensaje, int x, int y, float r, float g, float b)
 {
 	glDisable (GL_LIGHTING);
 
@@ -79,7 +121,8 @@ void print(char *mensaje, int x, int y, float r, float g, float b)
 
 	glEnable( GL_DEPTH_TEST );
 }
-void CMundo::OnDraw()
+
+void CMundoServidor::OnDraw()
 {
 	//Borrado de la pantalla	
    	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -119,47 +162,15 @@ void CMundo::OnDraw()
 	glutSwapBuffers();
 }
 
-void CMundo::OnTimer(int value)
+void CMundoServidor::OnTimer(int value)
 {	
-	dat->esfera=esfera;
-	dat->raqueta=jugador2;
-	dat->puntos_1=puntos1;
-	dat->puntos_2=puntos2;
-
-	dat2->esfera=esfera;
-	dat2->raqueta=jugador2;
-	dat2->puntos_1=puntos1;
-	dat2->puntos_2=puntos2;
-
-	n_j = dat->j_id + dat2->j_id;
-	
-	if (puntos1 >= 3 || puntos2 >= 3) {
-		exit(0);
-	}
-
-	if (n_j == 2) {
-
-		if(dat2->accion==1) jugador1.velocidad.y=8;
-		else if(dat2->accion==-1) jugador1.velocidad.y=-8;
-		else jugador1.velocidad.y=0;
-
-		if(dat->accion==1) jugador2.velocidad.y=8;
-		else if(dat->accion==-1) jugador2.velocidad.y=-8;
-		else jugador2.velocidad.y=0;
-
-	} else if (n_j == 1) {
-
-		if(dat->accion==1) jugador2.velocidad.y=8;
-		else if(dat->accion==-1) jugador2.velocidad.y=-8;
-		else jugador2.velocidad.y=0;
-
-	}
-
+	char buf[1024];
 	char cad[100];
 
 	jugador1.Mueve(0.025f);
 	jugador2.Mueve(0.025f);
 	esfera.Mueve(0.025f);
+
 	int i;
 	for(i=0;i<paredes.size();i++)
 	{
@@ -202,27 +213,19 @@ void CMundo::OnTimer(int value)
 			sprintf(cad,"Jugador 1 marca 1 punto, lleva un total de %d puntos.\n",puntos1);
 			if (fd >= 0) write(fd, cad, strlen(cad));
 		}
+
 	}
+
+	sprintf(buf,"%f %f %f %f %f %f %f %f %f %f %d %d", esfera.centro.x,esfera.centro.y, jugador1.x1,jugador1.y1,jugador1.x2,jugador1.y2,jugador2.x1,jugador2.y1,jugador2.x2,jugador2.y2, puntos1, puntos2);
+	if (fd_sc >= 0 && write(fd_sc, buf, strlen(buf)) < 0) exit(0);
+
 }
 
-void CMundo::OnKeyboardDown(unsigned char key, int x, int y)
+void CMundoServidor::OnKeyboardDown(unsigned char key, int x, int y)
 {
-if (n_j < 2) { 
-	switch(key){ 
-		case 's': jugador1.velocidad.y=-4; 	break; 
-		case 'w': jugador1.velocidad.y=4; break; 
-	} 
 }
 
-if (n_j == 0) { 
-	switch(key){ 
-		case 'l': jugador2.velocidad.y=-4; break; 
-		case 'o': jugador2.velocidad.y=4; break; 
-	} 
-}
-}
-
-void CMundo::Init()
+void CMundoServidor::Init()
 {
 	Plano p;
 //pared inferior
@@ -257,24 +260,15 @@ void CMundo::Init()
 		perror("No puede abrirse el FIFO");
 	}
 
-	if ((fd_bot = open("F_bot", O_RDWR | O_CREAT | O_TRUNC, 0666)) < 0) {
-		perror("No puede abrirse el bot");
-	}
+	//FIFO Servidor-Cliente
+	unlink("F_sc");
+	unlink("F_cs");
+	if (mkfifo("F_sc", 0600) < 0) { perror("mkfifo F_sc"); return; }
+	if (mkfifo("F_cs", 0600) < 0) { perror("mkfifo F_cs"); return; }
 
-	ftruncate(fd_bot, 2*sizeof(DatosMemCompartida));
+	if ((fd_sc = open("F_sc", O_WRONLY)) < 0) { perror("open F_sc"); return; }
+	if ((fd_cs = open("F_cs", O_RDONLY)) < 0) { perror("open F_cs"); return; }
 
-	dat = (DatosMemCompartida*)mmap(NULL, 2*sizeof(DatosMemCompartida), PROT_READ | PROT_WRITE, MAP_SHARED, fd_bot, 0);
-
-	if (dat == MAP_FAILED)
-	{
-		perror("Error en la proyeccion mmap"); 
-		exit (1);
-	}
-
-	dat2 = dat + 1;
-
-	dat ->j_id = 0;
-	dat2 ->j_id = 0;
-
-	close(fd_bot);
+	pthread_create(&thid1, NULL, hilo_comandos, this);
 }
+

@@ -6,6 +6,7 @@
 #define AFX_MUNDO_H__9510340A_3D75_485F_93DC_302A43B8039A__INCLUDED_
 
 #include <vector>
+#include <pthread.h>
 #include "Plano.h"
 
 #if _MSC_VER > 1000
@@ -17,22 +18,23 @@
 #include "DatosMemCompartida.h"
 
 
-class CMundo  
+class CMundoServidor  
 {
-	DatosMemCompartida* dat;
-	DatosMemCompartida* dat2;
 	int fd;
-	int fd_bot;
+	int fd_sc;
+	int fd_cs;
 	int n_j;
+	pthread_t thid1;
 public:
 	void Init();
-	CMundo();
-	virtual ~CMundo();	
+	CMundoServidor();
+	virtual ~CMundoServidor();	
 	
 	void InitGL();	
 	void OnKeyboardDown(unsigned char key, int x, int y);
 	void OnTimer(int value);
 	void OnDraw();	
+	void RecibeComandosJugador();
 
 	Esfera esfera;
 	std::vector<Plano> paredes;
