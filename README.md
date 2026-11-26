@@ -62,3 +62,7 @@ Además, se ha modificado la lógica del juego para que el partido termine autom
 Práctica 3.
 
 En esta práctica se ha creado una nueva rama del repositorio para incorporar el bot, un programa independiente que se comunica con el juego mediante un fichero proyectado en memoria y elige qué acción realizar para evitar que le marquen un punto. 
+
+Práctica 4.
+
+En esta práctica se ha separado la ejecución del juego del tenis en cliente y servidor. La comunicación entre ambos se realizará por medio de dos tuberías fifos. La conexión con el logger y el control del juego lo realizará el servidor, mientras que la detección de las teclas del jugador la gestionará el cliente, así como la comunicación con los bots.
