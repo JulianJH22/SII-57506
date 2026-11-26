@@ -18,4 +18,4 @@ ADD_EXECUTABLE(cliente src/Cliente.cpp ${COMMON_SRCS})
 ADD_EXECUTABLE(servidor src/Servidor.cpp ${COMMON_SRCS})
 
 TARGET_LINK_LIBRARIES(cliente glut GL GLU)
-TARGET_LINK_LIBRARIES(servidor glut GL GLU)
+TARGET_LINK_LIBRARIES(servidor glut GL GLU pthread)

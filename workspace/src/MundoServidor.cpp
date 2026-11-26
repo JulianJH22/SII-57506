@@ -32,9 +32,10 @@ void CMundoServidor::RecibeComandosJugador()
             usleep(10);
             char cad[100];
 			ssize_t n = read(fd_cs, cad, sizeof(cad) - 1);
+			if (n <= 0) break;      // el cliente cerró o hubo error
             cad[n] = '\0';
             unsigned char key;
-            sscanf(cad,"%c %d",&key, &n_j);
+            sscanf(cad,"%c %d %d %d",&key, &n_j, &accion1, &accion2);
 
 			if (n_j < 2) { 
 				switch(key){ 
@@ -56,7 +57,8 @@ CMundoServidor::CMundoServidor()
 {
 	fd = -1;
 	fd_sc = -1;
-	n_j = 0;
+	fd_cs = -1;
+	n_j = accion1 = accion2 = 0;
 	puntos1 = 0;
 	puntos2 = 0;
 	Init();
@@ -64,12 +66,13 @@ CMundoServidor::CMundoServidor()
 
 CMundoServidor::~CMundoServidor()
 {
+	pthread_cancel(thid1);
 	pthread_join(thid1, NULL);
 	if (fd >= 0) close(fd);
 	if (fd_sc >= 0) close(fd_sc);
 	if (fd_cs >= 0) close(fd_cs);
 	unlink("F_sc");
-	unlink("F_cs");
+	
 }
 
 void CMundoServidor::InitGL()
@@ -164,12 +167,30 @@ void CMundoServidor::OnDraw()
 
 void CMundoServidor::OnTimer(int value)
 {	
-	char buf[1024];
 	char cad[100];
 
 	jugador1.Mueve(0.025f);
 	jugador2.Mueve(0.025f);
 	esfera.Mueve(0.025f);
+
+	if (n_j == 2) {
+
+		if(accion2==1) jugador1.velocidad.y=8;
+		else if(accion2==-1) jugador1.velocidad.y=-8;
+		else jugador1.velocidad.y=0;
+
+		if(accion1==1) jugador2.velocidad.y=8;
+		else if(accion1==-1) jugador2.velocidad.y=-8;
+		else jugador2.velocidad.y=0;
+
+	} else if (n_j == 1) {
+
+		if(accion1==1) jugador2.velocidad.y=8;
+		else if(accion1==-1) jugador2.velocidad.y=-8;
+		else jugador2.velocidad.y=0;
+
+	}
+
 
 	int i;
 	for(i=0;i<paredes.size();i++)
@@ -216,9 +237,12 @@ void CMundoServidor::OnTimer(int value)
 
 	}
 
-	sprintf(buf,"%f %f %f %f %f %f %f %f %f %f %d %d", esfera.centro.x,esfera.centro.y, jugador1.x1,jugador1.y1,jugador1.x2,jugador1.y2,jugador2.x1,jugador2.y1,jugador2.x2,jugador2.y2, puntos1, puntos2);
-	if (fd_sc >= 0 && write(fd_sc, buf, strlen(buf)) < 0) exit(0);
-
+	char buf[200];
+	memset(buf, 0, sizeof(buf));
+	sprintf(buf, "%f %f %f %f %f %f %f %f %f %f %d %d", esfera.centro.x,esfera.centro.y, jugador1.x1,jugador1.y1,jugador1.x2,jugador1.y2,jugador2.x1,jugador2.y1,jugador2.x2,jugador2.y2, puntos1, puntos2);
+	if (fd_sc >= 0) write(fd_sc, buf, sizeof(buf));
+	
+	if (puntos1 >= 3 || puntos2 >= 3) exit(0);
 }
 
 void CMundoServidor::OnKeyboardDown(unsigned char key, int x, int y)
@@ -262,9 +286,7 @@ void CMundoServidor::Init()
 
 	//FIFO Servidor-Cliente
 	unlink("F_sc");
-	unlink("F_cs");
 	if (mkfifo("F_sc", 0600) < 0) { perror("mkfifo F_sc"); return; }
-	if (mkfifo("F_cs", 0600) < 0) { perror("mkfifo F_cs"); return; }
 
 	if ((fd_sc = open("F_sc", O_WRONLY)) < 0) { perror("open F_sc"); return; }
 	if ((fd_cs = open("F_cs", O_RDONLY)) < 0) { perror("open F_cs"); return; }

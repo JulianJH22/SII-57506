@@ -25,6 +25,7 @@ class CMundoCliente
 	int fd_cs;
 	int fd_bot;
 	int n_j;
+	char k;
 public:
 	void Init();
 	CMundoCliente();

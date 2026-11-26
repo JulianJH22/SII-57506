@@ -23,7 +23,7 @@ class CMundoServidor
 	int fd;
 	int fd_sc;
 	int fd_cs;
-	int n_j;
+	int n_j, accion1, accion2;
 	pthread_t thid1;
 public:
 	void Init();

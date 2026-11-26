@@ -21,18 +21,23 @@
 CMundoCliente::CMundoCliente()
 {
 	fd_sc = -1;
-	fd_bot = -1;
-	n_j = 0;
-	dat = dat2 = NULL;
-	puntos1 = 0;
-	puntos2 = 0;
-	Init();
+    fd_cs = -1;
+    fd_bot = -1;
+
+    n_j = 0;
+    dat = dat2 = NULL;
+    puntos1 = 0;
+    puntos2 = 0;
+    k = '0';
+
+    Init();
 }
 
 CMundoCliente::~CMundoCliente()
 {
 	if (fd_sc >= 0) close(fd_sc);
 	if (fd_cs >= 0) close(fd_cs);
+	unlink("F_cs");
 }
 
 void CMundoCliente::InitGL()
@@ -126,6 +131,12 @@ void CMundoCliente::OnDraw()
 
 void CMundoCliente::OnTimer(int value)
 {	
+	//Actualizar la posicion de los objetos en pantalla
+	char buf[200];
+	ssize_t n = read(fd_sc, buf, sizeof(buf));
+	if (n <= 0) exit(0);
+	sscanf(buf, "%f %f %f %f %f %f %f %f %f %f %d %d", &esfera.centro.x,&esfera.centro.y, &jugador1.x1,&jugador1.y1,&jugador1.x2,&jugador1.y2, &jugador2.x1,&jugador2.y1,&jugador2.x2,&jugador2.y2, &puntos1, &puntos2);
+	
 	//Actualizar la posicion de los objetos para el bot
 	dat->esfera=esfera;
 	dat->raqueta=jugador2;
@@ -139,44 +150,25 @@ void CMundoCliente::OnTimer(int value)
 
 	n_j = dat->j_id + dat2->j_id;
 
-	if (puntos1 >= 3 || puntos2 >= 3) {
-		exit(0);
-	}
+	if (puntos1 >= 3 || puntos2 >= 3) { fprintf(stderr, "cliente sale con puntos %d-%d\n", puntos1, puntos2); exit(0);}
 
-	if (n_j == 2) {
-
-		if(dat2->accion==1) jugador1.velocidad.y=8;
-		else if(dat2->accion==-1) jugador1.velocidad.y=-8;
-		else jugador1.velocidad.y=0;
-
-		if(dat->accion==1) jugador2.velocidad.y=8;
-		else if(dat->accion==-1) jugador2.velocidad.y=-8;
-		else jugador2.velocidad.y=0;
-
-	} else if (n_j == 1) {
-
-		if(dat->accion==1) jugador2.velocidad.y=8;
-		else if(dat->accion==-1) jugador2.velocidad.y=-8;
-		else jugador2.velocidad.y=0;
-
-	}
-
-	//Actualizar la posicion de los objetos en pantalla
-	char buf[1024];
-	ssize_t n = read(fd_sc, buf, sizeof(buf) - 1);
-
-	if (n <= 0) exit(0);      // el servidor cerró o hubo error
-	buf[n] = '\0';
-	sscanf(buf,"%f %f %f %f %f %f %f %f %f %f %d %d", &esfera.centro.x,&esfera.centro.y, &jugador1.x1,&jugador1.y1,&jugador1.x2,&jugador1.y2, &jugador2.x1,&jugador2.y1,&jugador2.x2,&jugador2.y2, &puntos1, &puntos2); 
+	ssize_t nn = 0;
+	char bbot[100];
+	memset(bbot, 0, sizeof(bbot));
+	sprintf(bbot, "%c %d %d %d", k, n_j, dat->accion, dat2->accion);
+	nn = write(fd_cs, bbot, sizeof(bbot));
+	if (nn < 0) {
+        perror("Error escribiendo en F_cs");
+        close(fd_cs);
+        fd_cs = -1;
+    }
+	k = '0';
 
 }
 
 void CMundoCliente::OnKeyboardDown(unsigned char key, int x, int y)
 {
-	char buf[100];
-	sprintf(buf,"%c %d", key, n_j);
-	if (fd_cs >= 0) write(fd_cs, buf, strlen(buf));
-
+	k = key;
 }
 
 void CMundoCliente::Init()
@@ -210,7 +202,10 @@ void CMundoCliente::Init()
 	jugador2.x1=6;jugador2.y1=-1;
 	jugador2.x2=6;jugador2.y2=1;
 
-	if ((fd_sc = open("F_sc", O_RDONLY)) < 0) { perror("open F_sc"); return; }
+	unlink("F_cs");
+	if (mkfifo("F_cs", 0600) < 0) { perror("mkfifo F_cs"); return; }
+
+	if ((fd_sc = open("F_sc", O_RDONLY)) < 0) { perror("open F_sc"); return; }	
 	if ((fd_cs = open("F_cs", O_WRONLY)) < 0) { perror("open F_cs"); return; }
 
 	//Proyeccion de memoria compartida para el bot
