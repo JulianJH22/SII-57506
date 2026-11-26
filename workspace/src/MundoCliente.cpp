@@ -136,7 +136,7 @@ void CMundoCliente::OnTimer(int value)
 	ssize_t n = read(fd_sc, buf, sizeof(buf));
 	if (n <= 0) exit(0);
 	sscanf(buf, "%f %f %f %f %f %f %f %f %f %f %d %d", &esfera.centro.x,&esfera.centro.y, &jugador1.x1,&jugador1.y1,&jugador1.x2,&jugador1.y2, &jugador2.x1,&jugador2.y1,&jugador2.x2,&jugador2.y2, &puntos1, &puntos2);
-	
+
 	//Actualizar la posicion de los objetos para el bot
 	dat->esfera=esfera;
 	dat->raqueta=jugador2;
@@ -144,9 +144,9 @@ void CMundoCliente::OnTimer(int value)
 	dat->puntos_2=puntos2;
 
 	dat2->esfera=esfera;
-	dat2->raqueta=jugador2;
-	dat2->puntos_1=puntos1;
-	dat2->puntos_2=puntos2;
+	dat2->raqueta=jugador1;
+	dat2->puntos_1=puntos2;
+	dat2->puntos_2=puntos1;
 
 	n_j = dat->j_id + dat2->j_id;
 
@@ -156,6 +156,7 @@ void CMundoCliente::OnTimer(int value)
 	char bbot[100];
 	memset(bbot, 0, sizeof(bbot));
 	sprintf(bbot, "%c %d %d %d", k, n_j, dat->accion, dat2->accion);
+	//fprintf(stderr, "Escribo: %s\n", bbot);
 	nn = write(fd_cs, bbot, sizeof(bbot));
 	if (nn < 0) {
         perror("Error escribiendo en F_cs");
@@ -163,7 +164,6 @@ void CMundoCliente::OnTimer(int value)
         fd_cs = -1;
     }
 	k = '0';
-
 }
 
 void CMundoCliente::OnKeyboardDown(unsigned char key, int x, int y)

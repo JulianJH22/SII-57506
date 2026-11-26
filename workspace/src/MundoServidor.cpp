@@ -241,8 +241,8 @@ void CMundoServidor::OnTimer(int value)
 	memset(buf, 0, sizeof(buf));
 	sprintf(buf, "%f %f %f %f %f %f %f %f %f %f %d %d", esfera.centro.x,esfera.centro.y, jugador1.x1,jugador1.y1,jugador1.x2,jugador1.y2,jugador2.x1,jugador2.y1,jugador2.x2,jugador2.y2, puntos1, puntos2);
 	if (fd_sc >= 0) write(fd_sc, buf, sizeof(buf));
-	
-	if (puntos1 >= 3 || puntos2 >= 3) exit(0);
+
+	if (puntos1 >= 3 || puntos2 >= 3) {usleep(250000); exit(0);}
 }
 
 void CMundoServidor::OnKeyboardDown(unsigned char key, int x, int y)
